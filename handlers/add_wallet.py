@@ -66,7 +66,7 @@ async def address_received(message: Message, state: FSMContext) -> None:
         bal = await fetch_balance_nano(addr)
     except Exception as e:
         await message.answer(
-            f"Не удалось прочитать адрес через TON API: {e}\nПроверьте адрес и попробуйте снова"
+            f"Не удалось прочитать адрес через TON API\nПроверьте адрес и попробуйте снова"
         )
         return
     if await db.wallet_exists_for_user(message.from_user.id, addr):
