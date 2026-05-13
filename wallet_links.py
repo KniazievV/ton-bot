@@ -3,6 +3,7 @@ from urllib.parse import quote
 
 # Публичная страница кошелька в Tonviewer
 _TONVIEWER = "https://tonviewer.com/{}"
+_TRONSCAN = "https://tronscan.org/#/address/{}"
 
 
 def short_address(addr: str, head: int = 3, tail: int = 3) -> str:
@@ -15,5 +16,16 @@ def short_address(addr: str, head: int = 3, tail: int = 3) -> str:
 def address_link_html(addr: str) -> str:
     a = addr.strip()
     url = _TONVIEWER.format(quote(a, safe=""))
+    label = html.escape(short_address(a))
+    return f'<a href="{html.escape(url)}">{label}</a>'
+
+
+def address_link_html_by_chain(chain: str, addr: str) -> str:
+    c = (chain or "").strip().upper()
+    a = addr.strip()
+    if c == "TRON":
+        url = _TRONSCAN.format(quote(a, safe=""))
+    else:
+        url = _TONVIEWER.format(quote(a, safe=""))
     label = html.escape(short_address(a))
     return f'<a href="{html.escape(url)}">{label}</a>'
