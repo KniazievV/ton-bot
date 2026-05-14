@@ -19,6 +19,16 @@ def _params(extra: dict[str, Any] | None = None) -> dict[str, Any]:
     return p
 
 
+def looks_like_ton_address(addr: str) -> bool:
+    """Грубая проверка формата адреса TON (user-friendly EQ/UQ или raw workchain:hex)."""
+    a = addr.strip()
+    if a.startswith(("EQ", "UQ")) and 46 <= len(a) <= 96:
+        return True
+    if (a.startswith("0:") or a.startswith("-1:")) and 8 <= len(a) <= 128:
+        return True
+    return False
+
+
 async def fetch_balance_nano(address: str) -> str:
     """Returns balance in nanoTON as decimal string. Raises on API/address error."""
     url = f"{TONCENTER_BASE}/getAddressInformation"
