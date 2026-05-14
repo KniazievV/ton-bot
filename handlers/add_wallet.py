@@ -88,23 +88,8 @@ async def address_received(message: Message, state: FSMContext) -> None:
     addr = message.text.strip()
     try:
         chain, bal = await _resolve_chain_and_balance(addr)
-    except ValueError:
-        await message.answer(
-            "Неверный формат адреса TRON: нужен mainnet-адрес из 34 символов (начинается с T), без пробелов."
-        )
-        return
-    except RuntimeError as e:
-        if str(e) == "UNRECOGNIZED_WALLET":
-            await message.answer(
-                "Не удалось определить сеть. Пришлите адрес TON (например, EQ… / UQ…) "
-                "или TRON (34 символа, начинается с T)."
-            )
-            return
-        raise
     except Exception:
-        await message.answer(
-            "Не удалось прочитать адрес через API\nПроверьте адрес и попробуйте снова"
-        )
+        await message.answer("Неверный формат адреса кошелька TON или TRON")
         return
     await state.update_data(chain=chain)
     if await db.wallet_exists_for_user(message.from_user.id, chain, addr):
