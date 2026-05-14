@@ -10,7 +10,11 @@ from handlers.keyboards import BTN_ADD, BTN_DELETE, BTN_LIST, main_menu_kb
 from handlers.messaging import HIDE_LINK_PREVIEW
 from handlers.states import AddWalletStates
 from ton_client import fetch_balance_nano, nano_to_ton_2dec
-from tron_client import atomic_to_usdt_2dec, fetch_usdt_trc20_balance_atomic
+from tron_client import (
+    atomic_to_usdt_2dec,
+    fetch_usdt_trc20_balance_atomic,
+    is_tron_mainnet_base58_address,
+)
 from wallet_links import address_link_html_by_chain
 
 router = Router(name="add_wallet")
@@ -94,6 +98,10 @@ async def address_received(message: Message, state: FSMContext) -> None:
     addr = message.text.strip()
     data0 = await state.get_data()
     chain = (data0.get("chain") or "TON").strip().upper()
+    # FSM в MemoryStorage теряется при рестарте/нескольких репликах — не полагаться только на callback.
+    if chain == "TON" and is_tron_mainnet_base58_address(addr):
+        chain = "TRON"
+        await state.update_data(chain="TRON")
     try:
         if chain == "TRON":
             bal = await fetch_usdt_trc20_balance_atomic(addr)

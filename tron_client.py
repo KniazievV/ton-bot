@@ -31,6 +31,11 @@ def _is_base58_tron_address(addr: str) -> bool:
     return True
 
 
+def is_tron_mainnet_base58_address(addr: str) -> bool:
+    """True if the string looks like a TRON mainnet base58 account (34 chars, T…)."""
+    return _is_base58_tron_address(addr)
+
+
 def _balance_from_trc20_balance_row(row: Any, contract: str) -> str | None:
     """TronGrid returns either legacy {balance: ...} or {CONTRACT_BASE58: balance_str}."""
     if not isinstance(row, dict):
