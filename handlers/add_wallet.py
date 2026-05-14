@@ -54,7 +54,7 @@ async def _resolve_chain_and_balance(addr: str) -> tuple[str, str]:
 async def add_clicked(message: Message, state: FSMContext) -> None:
     await state.set_state(AddWalletStates.wait_address)
     await message.answer(
-        "Отправьте адрес кошелька в сети TON или TRON.",
+        "Отправьте адрес кошелька в сети TON или TRON",
         reply_markup=main_menu_kb(),
     )
 
