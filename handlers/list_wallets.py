@@ -19,10 +19,10 @@ def _delete_kb(rows: list[dict]) -> InlineKeyboardMarkup:
         raw = r["display_name"]
         label = raw if len(raw) <= 28 else raw[:27] + "…"
         inkbd.append(
-            [InlineKeyboardButton(text=f"🗑 {label}", callback_data=f"delw:{r['id']}")]
+            [InlineKeyboardButton(text=f"{label}", callback_data=f"delw:{r['id']}")]
         )
     inkbd.append(
-        [InlineKeyboardButton(text="💥 Удалить все кошельки", callback_data="del_all_wallets")]
+        [InlineKeyboardButton(text="Удалить все кошельки", callback_data="del_all_wallets")]
     )
     return InlineKeyboardMarkup(inline_keyboard=inkbd)
 
