@@ -99,6 +99,11 @@ async def address_received(message: Message, state: FSMContext) -> None:
             bal = await fetch_usdt_trc20_balance_atomic(addr)
         else:
             bal = await fetch_balance_nano(addr)
+    except ValueError:
+        await message.answer(
+            "Неверный формат адреса TRON: нужен mainnet-адрес из 34 символов (начинается с T), без пробелов."
+        )
+        return
     except Exception:
         await message.answer(
             "Не удалось прочитать адрес через API\nПроверьте адрес и попробуйте снова"
