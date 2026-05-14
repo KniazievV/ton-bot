@@ -8,7 +8,6 @@ from handlers.keyboards import BTN_DELETE, BTN_LIST, main_menu_kb
 from handlers.messaging import HIDE_LINK_PREVIEW
 from ton_client import nano_to_ton_2dec
 from tron_client import atomic_to_usdt_2dec
-from wallet_links import address_link_html_by_chain
 
 router = Router(name="list_wallets")
 
@@ -40,9 +39,9 @@ async def build_list_text(user_id: int) -> str:
         else:
             bal = nano_to_ton_2dec(str(r["last_balance_nano"]))
             unit = "TON"
-        link = address_link_html_by_chain(chain, r["address"])
+        addr_esc = html.escape(r["address"])
         lines.append(
-            f"• <b>{html.escape(r['display_name'])}</b> — <b>{chain}</b> {link} - {bal} {unit}"
+            f"• <b>{html.escape(r['display_name'])}</b> — <code>{addr_esc}</code> — <b>{bal}</b> {unit}"
         )
     return "Ваши кошельки:\n\n" + "\n".join(lines)
 
