@@ -9,7 +9,8 @@ import db
 from config import POLL_INTERVAL_SEC
 from handlers.messaging import HIDE_LINK_PREVIEW
 from ton_client import fetch_balance_nano, nano_to_ton_2dec
-from wallet_links import address_link_html
+from tron_client import atomic_to_usdt_2dec, fetch_usdt_trc20_balance_atomic
+from wallet_links import address_link_html_by_chain
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ async def balance_poll_loop(bot: Bot) -> None:
             for w in wallets:
                 wid = w["id"]
                 uid = w["user_id"]
+                chain = (w.get("chain") or "TON").strip().upper()
                 addr = w["address"]
                 title = w.get("display_name") or "—"
                 notify = bool(w["notify"])
@@ -30,22 +32,37 @@ async def balance_poll_loop(bot: Bot) -> None:
                 except ValueError:
                     old = 0
                 try:
-                    new_s = await fetch_balance_nano(addr)
-                    new = int(new_s)
+                    if chain == "TRON":
+                        new_s = await fetch_usdt_trc20_balance_atomic(addr)
+                    else:
+                        new_s = await fetch_balance_nano(addr)
+                    new = int(str(new_s))
                 except Exception:
-                    log.exception("TON poll failed for wallet %s", wid)
+                    log.exception("%s poll failed for wallet %s", chain, wid)
                     continue
                 if new > old and notify:
                     delta = new - old
+                    if chain == "TRON":
+                        old_s = atomic_to_usdt_2dec(str(old))
+                        new_s2 = atomic_to_usdt_2dec(str(new))
+                        delta_s = atomic_to_usdt_2dec(str(delta))
+                        unit = "USDT"
+                        title_line = "Пополнение на кошельке TRON (USDT TRC-20)"
+                    else:
+                        old_s = nano_to_ton_2dec(str(old))
+                        new_s2 = nano_to_ton_2dec(str(new))
+                        delta_s = nano_to_ton_2dec(str(delta))
+                        unit = "TON"
+                        title_line = "Пополнение на кошельке TON"
                     try:
                         await bot.send_message(
                             uid,
-                            "Пополнение на кошельке TON\n\n"
+                            f"{title_line}\n\n"
                             f"Имя: <b>{html.escape(str(title))}</b>\n"
-                            f"Адрес: {address_link_html(addr)}\n"
-                            f"Было: {nano_to_ton_2dec(str(old))} TON\n"
-                            f"Стало: {nano_to_ton_2dec(str(new))} TON\n"
-                            f"<b>+{nano_to_ton_2dec(str(delta))} TON</b>",
+                            f"Адрес: {address_link_html_by_chain(chain, addr)}\n"
+                            f"Было: {old_s} {unit}\n"
+                            f"Стало: {new_s2} {unit}\n"
+                            f"<b>+{delta_s} {unit}</b>",
                             link_preview_options=HIDE_LINK_PREVIEW,
                         )
                     except Exception:

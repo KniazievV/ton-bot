@@ -9,7 +9,6 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.storage.memory import MemoryStorage
 
 import db
 from config import TELEGRAM_BOT_TOKEN
@@ -25,13 +24,29 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
+def _fsm_storage():
+    redis_url = os.environ.get("REDIS_URL", "").strip()
+    if redis_url:
+        from aiogram.fsm.storage.redis import RedisStorage
+
+        log.info("FSM storage: Redis (состояние диалогов переживает рестарт)")
+        return RedisStorage.from_url(redis_url)
+    from aiogram.fsm.storage.memory import MemoryStorage
+
+    log.warning(
+        "FSM storage: память процесса — при рестарте контейнера шаг «сеть» может сброситься; "
+        "для Railway добавьте Redis и переменную REDIS_URL"
+    )
+    return MemoryStorage()
+
+
 async def main() -> None:
     if not TELEGRAM_BOT_TOKEN:
         log.error("Set TELEGRAM_BOT_TOKEN in .env")
         sys.exit(1)
     await db.init_db()
     bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    dp = Dispatcher(storage=MemoryStorage())
+    dp = Dispatcher(storage=_fsm_storage())
     dp.include_router(setup_routers())
     port_raw = os.environ.get("PORT", "").strip()
 
